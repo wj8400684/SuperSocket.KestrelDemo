@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33530.505
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.Kestrel", "SuperSocket.Kestrel\SuperSocket.Kestrel.csproj", "{D5D07617-E378-4468-A061-BE5F55FB19FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FD7A2BF5-E8EA-40EE-9F17-B5FB9DD872B2}
+	EndGlobalSection
+EndGlobal
