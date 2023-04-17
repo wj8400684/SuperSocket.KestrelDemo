@@ -68,6 +68,8 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
 
             yield return package;
         }
+
+        ((IDisposable)_packagePipe).Dispose();
     }
 
     public override async ValueTask CloseAsync(CloseReason closeReason)

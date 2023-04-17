@@ -34,7 +34,7 @@ internal sealed class KestrelObjectPipe<T> : IValueTaskSource<T>, IDisposable
     private const int _segmentSize = 5;
     private BufferSegment _first;
     private BufferSegment _current;
-    private object _syncRoot = new object();
+    private object _syncRoot = new();
     private static readonly ArrayPool<T> _pool = ArrayPool<T>.Shared;
     private ManualResetValueTaskSourceCore<T> _taskSourceCore;
     private bool _waiting = false;
