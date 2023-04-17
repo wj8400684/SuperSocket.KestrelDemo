@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="7.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-    <PackageReference Include="SuperSocket" Version="2.0.0-beta.15" />
+    <PackageReference Include="SuperSocket" Version="2.0.0-beta.15.406" />
   </ItemGroup>
 
 </Project>
