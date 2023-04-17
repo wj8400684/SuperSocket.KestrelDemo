@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
 using SuperSocket.ProtoBase;
 using System.Buffers;
-using System.Data.Common;
 using System.IO.Pipelines;
 
 namespace SuperSocket.Kestrel.Internal;
@@ -121,7 +120,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
             var writer = _writer;
-            write(writer);
+            write(_writer);
             await writer.FlushAsync().ConfigureAwait(false);
         }
         finally
