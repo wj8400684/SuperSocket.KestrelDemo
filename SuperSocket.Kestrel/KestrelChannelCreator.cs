@@ -55,8 +55,6 @@ public sealed class KestrelChannelCreator : ConnectionHandler, IKestrelChannelCr
             return;
         }
 
-        handler.Invoke(this, channel);
-
-        await ((IKestrelPipeChannel)channel).WaitHandleClosingAsync();
+        await handler.Invoke(this, channel);
     }
 }

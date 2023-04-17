@@ -11,8 +11,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
     ChannelBase<TPackageInfo>,
     IChannel<TPackageInfo>,
     IChannel,
-    IPipeChannel,
-    IKestrelPipeChannel
+    IPipeChannel
 {
     private Task _readsTask;
     private IPipelineFilter<TPackageInfo> _pipelineFilter;
@@ -52,6 +51,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
     public override void Start()
     {
         _readsTask = ReadPipeAsync(_reader);
+        WaitHandleClosing();
     }
 
     public async override IAsyncEnumerable<TPackageInfo> RunAsync()
@@ -132,7 +132,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
 
     #region private
 
-    public async ValueTask WaitHandleClosingAsync()
+    private async void WaitHandleClosing()
     {
         await HandleClosing().ConfigureAwait(false);
     }
