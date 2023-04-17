@@ -19,8 +19,6 @@ internal sealed class KestrelChannelCreatorFactory : IChannelCreatorFactory
         var filterFactory = pipelineFilterFactory as IPipelineFilterFactory<TPackageInfo>;
         channelOptions.Logger = loggerFactory.CreateLogger(nameof(IChannel));
 
-        var channelFactoryLogger = loggerFactory.CreateLogger(nameof(TcpChannelCreator));
-
         _creator.ChannelFactoryAsync += (context) =>
         {
             var filter = filterFactory.Create(context);
