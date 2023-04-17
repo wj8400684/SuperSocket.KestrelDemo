@@ -1,11 +1,14 @@
-# SuperSocket.Kestrel
+using Microsoft.AspNetCore.Connections;
+using SuperSocket;
+using SuperSocket.Kestrel;
+using SuperSocket.ProtoBase;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var serverOptions = builder.Configuration.GetSection("ServerOptions").Get<ServerOptions>()!;
+
 builder.WebHost.ConfigureKestrel((context, options) =>
 {
-    var serverOptions = context.Configuration.GetSection("ServerOptions").Get<ServerOptions>()!;
-
     foreach (var listeners in serverOptions.Listeners)
     {
         options.Listen(listeners.GetListenEndPoint(), listenOptions =>
@@ -16,9 +19,9 @@ builder.WebHost.ConfigureKestrel((context, options) =>
 });
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
-    .UseKestrelChannelCreatorFactory()
-    .AsMinimalApiHostBuilder()
-    .ConfigureHostBuilder();
+            .UseKestrelChannelCreatorFactory()
+            .AsMinimalApiHostBuilder()
+            .ConfigureHostBuilder();
 
 var app = builder.Build();
 
