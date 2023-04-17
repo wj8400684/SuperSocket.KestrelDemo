@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.Kestrel", "SuperSocket.Kestrel\SuperSocket.Kestrel.csproj", "{D5D07617-E378-4468-A061-BE5F55FB19FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperSocket.Kestrel", "SuperSocket.Kestrel\SuperSocket.Kestrel.csproj", "{D5D07617-E378-4468-A061-BE5F55FB19FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{A15F7C5E-F962-412E-8DB6-C8A702981DCD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5D07617-E378-4468-A061-BE5F55FB19FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A15F7C5E-F962-412E-8DB6-C8A702981DCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A15F7C5E-F962-412E-8DB6-C8A702981DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A15F7C5E-F962-412E-8DB6-C8A702981DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A15F7C5E-F962-412E-8DB6-C8A702981DCD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
