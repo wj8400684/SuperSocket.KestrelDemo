@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
 using SuperSocket.ProtoBase;
 using System.Buffers;
+using System.Data.Common;
 using System.IO.Pipelines;
 
 namespace SuperSocket.Kestrel.Internal;
@@ -13,6 +14,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
     IChannel,
     IPipeChannel
 {
+    private bool _isAbort;
     private Task _readsTask;
     private IPipelineFilter<TPackageInfo> _pipelineFilter;
 
@@ -72,10 +74,15 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
         ((IDisposable)_packagePipe).Dispose();
     }
 
-    public override async ValueTask CloseAsync(CloseReason closeReason)
+    public override ValueTask CloseAsync(CloseReason closeReason)
     {
+        _isAbort = true;
+
         CloseReason = closeReason;
-        await HandleClosing();
+
+        _connection.Abort();
+
+        return ValueTask.CompletedTask;
     }
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
@@ -170,7 +177,8 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
 
     private void Close()
     {
-        _connection.Abort();
+        if (!_isAbort)
+            _connection.Abort();
     }
 
     private bool IsIgnorableException(Exception e)

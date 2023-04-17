@@ -17,6 +17,8 @@ builder.WebHost.ConfigureKestrel((context, options) =>
 });
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
+    .UseClearIdleSession()
+    .UseInProcSessionContainer()
     .UseKestrelChannelCreatorFactory()
     .AsMinimalApiHostBuilder()
     .ConfigureHostBuilder();
