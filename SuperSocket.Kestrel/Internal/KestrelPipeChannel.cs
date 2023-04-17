@@ -183,7 +183,7 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
 
     private bool IsIgnorableException(Exception e)
     {
-        if (e is ObjectDisposedException || e is NullReferenceException)
+        if (e is ObjectDisposedException || e is NullReferenceException || e is ConnectionAbortedException)
             return true;
 
         if (e.InnerException != null)
