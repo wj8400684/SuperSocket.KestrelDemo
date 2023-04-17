@@ -212,7 +212,21 @@ internal sealed class KestrelPipeChannel<TPackageInfo> :
             }
             catch (Exception e)
             {
-                OnError("Failed to read from the pipe", e);
+                if (!IsIgnorableException(e))
+                {
+                    OnError("Failed to read from the pipe", e);
+
+                    if (!CloseReason.HasValue)
+                    {
+                        CloseReason = _connectionToken.IsCancellationRequested
+                            ? SuperSocket.Channel.CloseReason.RemoteClosing : SuperSocket.Channel.CloseReason.SocketError;
+                    }
+                }
+                else if (!CloseReason.HasValue)
+                {
+                    CloseReason = SuperSocket.Channel.CloseReason.Unknown;
+                }
+
                 break;
             }
 
