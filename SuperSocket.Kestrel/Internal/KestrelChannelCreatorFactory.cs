@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
+using SuperSocket.Kestrel.Channel;
 using SuperSocket.ProtoBase;
 
 namespace SuperSocket.Kestrel.Internal;

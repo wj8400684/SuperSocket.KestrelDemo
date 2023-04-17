@@ -5,7 +5,7 @@ using SuperSocket.ProtoBase;
 using System.Buffers;
 using System.IO.Pipelines;
 
-namespace SuperSocket.Kestrel.Internal;
+namespace SuperSocket.Kestrel.Channel;
 
 public sealed class KestrelPipeChannel<TPackageInfo> :
     ChannelBase<TPackageInfo>,
@@ -267,7 +267,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             {
                 OnError("Protocol error", e);
                 // close the connection if get a protocol error
-                CloseReason = Channel.CloseReason.ProtocolError;
+                CloseReason = SuperSocket.Channel.CloseReason.ProtocolError;
                 Close();//解析协议出现异常关闭连接
                 break;
             }
@@ -327,7 +327,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             if (maxPackageLength > 0 && len > maxPackageLength)
             {
                 OnError($"Package cannot be larger than {maxPackageLength}.");
-                CloseReason = Channel.CloseReason.ProtocolError;
+                CloseReason = SuperSocket.Channel.CloseReason.ProtocolError;
                 // close the the connection directly
                 Close();
                 return false;
