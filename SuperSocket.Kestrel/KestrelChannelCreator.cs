@@ -32,6 +32,7 @@ public sealed class KestrelChannelCreator : ConnectionHandler, IKestrelChannelCr
     Task IChannelCreator.StopAsync()
     {
         IsRunning = false;
+
         return Task.CompletedTask;
     }
 
@@ -55,6 +56,13 @@ public sealed class KestrelChannelCreator : ConnectionHandler, IKestrelChannelCr
             return;
         }
 
-        await handler.Invoke(this, channel);
+        try
+        {
+            await handler.Invoke(this, channel);
+        }
+        finally
+        {
+            await connection.DisposeAsync();
+        }
     }
 }
