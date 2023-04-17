@@ -11,17 +11,17 @@ builder.WebHost.ConfigureKestrel((context, options) =>
 {
     foreach (var listeners in serverOptions.Listeners)
     {
-        options.Listen(listeners.GetListenEndPoint(), listenOptions =>
-        {
-            listenOptions.UseConnectionHandler<KestrelChannelCreator>();
-        });
+        options.ListenNamedPipe(string.Join(":", listeners.Ip, listeners.Port),
+            listenOptions => listenOptions.UseConnectionHandler<KestrelChannelCreator>());
+        // options.Listen(listeners.GetListenEndPoint(),
+        //     listenOptions => { listenOptions.UseConnectionHandler<KestrelChannelCreator>(); });
     }
 });
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
-            .UseKestrelChannelCreatorFactory()
-            .AsMinimalApiHostBuilder()
-            .ConfigureHostBuilder();
+    .UseKestrelChannelCreatorFactory()
+    .AsMinimalApiHostBuilder()
+    .ConfigureHostBuilder();
 
 var app = builder.Build();
 
