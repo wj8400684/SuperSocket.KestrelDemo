@@ -7,7 +7,7 @@ using System.IO.Pipelines;
 
 namespace SuperSocket.Kestrel.Internal;
 
-internal sealed class KestrelPipeChannel<TPackageInfo> :
+public sealed class KestrelPipeChannel<TPackageInfo> :
     ChannelBase<TPackageInfo>,
     IChannel<TPackageInfo>,
     IChannel,
