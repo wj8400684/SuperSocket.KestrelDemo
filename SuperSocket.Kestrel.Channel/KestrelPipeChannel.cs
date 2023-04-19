@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
+using SuperSocket.Kestrel.Internal;
 using SuperSocket.ProtoBase;
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Runtime.InteropServices;
 
 namespace SuperSocket.Kestrel.Channel;
 
@@ -14,93 +14,141 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
     IChannel,
     IPipeChannel
 {
+    private bool _isAbort;
+    private Task _readsTask;
     private IPipelineFilter<TPackageInfo> _pipelineFilter;
 
-    private CancellationTokenSource _cts = new CancellationTokenSource();
+    private readonly ILogger _logger;
+    private readonly PipeReader _reader;
+    private readonly PipeWriter _writer;
+    private readonly ChannelOptions _options;
+    private readonly ConnectionContext _connection;
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private readonly CancellationToken _connectionToken;
+    private readonly KestrelObjectPipe<TPackageInfo> _packagePipe = new();
 
-    protected SemaphoreSlim SendLock { get; } = new SemaphoreSlim(1, 1);
-
-    protected Pipe Out { get; }
-
-    Pipe IPipeChannel.Out
+    public KestrelPipeChannel(ConnectionContext context,
+                              IPipelineFilter<TPackageInfo> pipelineFilter,
+                              ChannelOptions options)
     {
-        get { return Out; }
-    }
-
-    protected Pipe In { get; }
-
-    Pipe IPipeChannel.In
-    {
-        get { return In; }
-    }
-
-    IPipelineFilter IPipeChannel.PipelineFilter
-    {
-        get { return _pipelineFilter; }
-    }
-
-    private IObjectPipe<TPackageInfo> _packagePipe;
-
-    protected ILogger Logger { get; }
-
-    protected ChannelOptions Options { get; }
-
-    private Task _readsTask;
-
-    private Task _sendsTask;
-
-    private bool _isDetaching = false;
-
-    protected PipeChannel(IPipelineFilter<TPackageInfo> pipelineFilter, ChannelOptions options)
-    {
+        _options = options;
+        _logger = options.Logger;
+        _connection = context;
+        _reader = context.Transport.Input;
+        _writer = context.Transport.Output;
         _pipelineFilter = pipelineFilter;
-
-        if (!options.ReadAsDemand)
-            _packagePipe = new DefaultObjectPipe<TPackageInfo>();
-        else
-            _packagePipe = new DefaultObjectPipeWithSupplyControl<TPackageInfo>();
-
-        Options = options;
-        Logger = options.Logger;
-        Out = options.Out ?? new Pipe();
-        In = options.In ?? new Pipe();
+        _connectionToken = context.ConnectionClosed;
+        LocalEndPoint = context.LocalEndPoint;
+        RemoteEndPoint = context.RemoteEndPoint;
     }
+
+    Pipe IPipeChannel.In => throw new NotImplementedException();
+
+    Pipe IPipeChannel.Out => throw new NotImplementedException();
+
+    IPipelineFilter IPipeChannel.PipelineFilter => _pipelineFilter;
+
+    #region public
 
     public override void Start()
     {
-        _readsTask = ProcessReads();
-        _sendsTask = ProcessSends();
+        _readsTask = ReadPipeAsync(_reader);
         WaitHandleClosing();
     }
+
+    public async override IAsyncEnumerable<TPackageInfo> RunAsync()
+    {
+        if (_readsTask == null)
+            throw new Exception("The channel has not been started yet.");
+
+        while (!_connectionToken.IsCancellationRequested)
+        {
+            var package = await _packagePipe.ReadAsync();
+
+            if (package == null)
+                yield break;
+
+            yield return package;
+        }
+
+        ((IDisposable)_packagePipe).Dispose();
+    }
+
+    public override ValueTask CloseAsync(CloseReason closeReason)
+    {
+        _isAbort = true;
+
+        CloseReason = closeReason;
+
+        _connection.Abort();
+
+        return ValueTask.CompletedTask;
+    }
+
+    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
+    {
+        try
+        {
+            await _sendLock.WaitAsync().ConfigureAwait(false);
+            var writer = _writer;
+            WriteBuffer(writer, buffer);
+            await writer.FlushAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _sendLock.Release();
+        }
+    }
+
+    public override async ValueTask SendAsync<TPackage>(IPackageEncoder<TPackage> packageEncoder, TPackage package)
+    {
+        try
+        {
+            await _sendLock.WaitAsync().ConfigureAwait(false);
+            var writer = _writer;
+            WritePackageWithEncoder(writer, packageEncoder, package);
+            await writer.FlushAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _sendLock.Release();
+        }
+    }
+
+    public override async ValueTask SendAsync(Action<PipeWriter> write)
+    {
+        try
+        {
+            await _sendLock.WaitAsync().ConfigureAwait(false);
+            var writer = _writer;
+            write(_writer);
+            await writer.FlushAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _sendLock.Release();
+        }
+    }
+
+    public override ValueTask DetachAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region private
 
     private async void WaitHandleClosing()
     {
         await HandleClosing().ConfigureAwait(false);
     }
 
-    public async override IAsyncEnumerable<TPackageInfo> RunAsync()
-    {
-        if (_readsTask == null || _sendsTask == null)
-            throw new Exception("The channel has not been started yet.");
-
-        while (true)
-        {
-            var package = await _packagePipe.ReadAsync().ConfigureAwait(false);
-
-            if (package == null)
-            {
-                yield break;
-            }
-
-            yield return package;
-        }
-    }
-
-    private async ValueTask HandleClosing()
+    private async Task HandleClosing()
     {
         try
         {
-            await Task.WhenAll(_readsTask, _sendsTask).ConfigureAwait(false);
+            await _readsTask.ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -111,7 +159,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         }
         finally
         {
-            if (!_isDetaching && !IsClosed)
+            if (!IsClosed)
             {
                 try
                 {
@@ -127,104 +175,15 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         }
     }
 
-    protected abstract void Close();
-
-    public override async ValueTask CloseAsync(CloseReason closeReason)
+    private void Close()
     {
-        CloseReason = closeReason;
-        _cts.Cancel();
-        await HandleClosing().ConfigureAwait(false);
+        if (!_isAbort)
+            _connection.Abort();
     }
 
-    protected virtual async Task FillPipeAsync(PipeWriter writer)
+    private bool IsIgnorableException(Exception e)
     {
-        var options = Options;
-        var cts = _cts;
-
-        var supplyController = _packagePipe as ISupplyController;
-
-        if (supplyController != null)
-        {
-            cts.Token.Register(() =>
-            {
-                supplyController.SupplyEnd();
-            });
-        }
-
-        while (!cts.IsCancellationRequested)
-        {
-            try
-            {
-                if (supplyController != null)
-                {
-                    await supplyController.SupplyRequired().ConfigureAwait(false);
-
-                    if (cts.IsCancellationRequested)
-                        break;
-                }
-
-                var bufferSize = options.ReceiveBufferSize;
-                var maxPackageLength = options.MaxPackageLength;
-
-                if (bufferSize <= 0)
-                    bufferSize = 1024 * 4; //4k
-
-                var memory = writer.GetMemory(bufferSize);
-
-                var bytesRead = await FillPipeWithDataAsync(memory, cts.Token).ConfigureAwait(false);
-
-                if (bytesRead == 0)
-                {
-                    if (!CloseReason.HasValue)
-                        CloseReason = Channel.CloseReason.RemoteClosing;
-
-                    break;
-                }
-
-                LastActiveTime = DateTimeOffset.Now;
-
-                // Tell the PipeWriter how much was read
-                writer.Advance(bytesRead);
-            }
-            catch (Exception e)
-            {
-                if (!IsIgnorableException(e))
-                {
-                    if (!(e is OperationCanceledException))
-                        OnError("Exception happened in ReceiveAsync", e);
-
-                    if (!CloseReason.HasValue)
-                    {
-                        CloseReason = cts.IsCancellationRequested
-                            ? Channel.CloseReason.LocalClosing : Channel.CloseReason.SocketError;
-                    }
-                }
-                else if (!CloseReason.HasValue)
-                {
-                    CloseReason = Channel.CloseReason.RemoteClosing;
-                }
-
-                break;
-            }
-
-            // Make the data available to the PipeReader
-            var result = await writer.FlushAsync().ConfigureAwait(false);
-
-            if (result.IsCompleted)
-            {
-                break;
-            }
-        }
-
-        // Signal to the reader that we're done writing
-        await writer.CompleteAsync().ConfigureAwait(false);
-        // And don't allow writing data to outgoing pipeline
-        await Out.Writer.CompleteAsync().ConfigureAwait(false);
-    }
-
-    protected virtual bool IsIgnorableException(Exception e)
-    {
-        if (e is ObjectDisposedException || e is NullReferenceException)
+        if (e is ObjectDisposedException || e is NullReferenceException || e is ConnectionAbortedException)
             return true;
 
         if (e.InnerException != null)
@@ -233,92 +192,10 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         return false;
     }
 
-    protected abstract ValueTask<int> FillPipeWithDataAsync(Memory<byte> memory, CancellationToken cancellationToken);
-
-    protected virtual async Task ProcessReads()
-    {
-        var pipe = In;
-
-        Task writing = FillPipeAsync(pipe.Writer);
-        Task reading = ReadPipeAsync(pipe.Reader);
-
-        await Task.WhenAll(reading, writing).ConfigureAwait(false);
-    }
-
-    protected async ValueTask<bool> ProcessOutputRead(PipeReader reader, CancellationTokenSource cts)
-    {
-        var result = await reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
-
-        var completed = result.IsCompleted;
-
-        var buffer = result.Buffer;
-        var end = buffer.End;
-
-        if (!buffer.IsEmpty)
-        {
-            try
-            {
-                await SendOverIOAsync(buffer, CancellationToken.None).ConfigureAwait(false); ;
-                LastActiveTime = DateTimeOffset.Now;
-            }
-            catch (Exception e)
-            {
-                cts?.Cancel(false);
-
-                if (!IsIgnorableException(e))
-                    OnError("Exception happened in SendAsync", e);
-
-                return true;
-            }
-        }
-
-        reader.AdvanceTo(end);
-        return completed;
-    }
-
-    protected virtual async Task ProcessSends()
-    {
-        var output = Out.Reader;
-        var cts = _cts;
-
-        while (true)
-        {
-            var completed = await ProcessOutputRead(output, cts).ConfigureAwait(false);
-
-            if (completed)
-            {
-                break;
-            }
-        }
-
-        output.Complete();
-    }
-
-
     private void CheckChannelOpen()
     {
-        if (this.IsClosed)
-        {
+        if (IsClosed)
             throw new Exception("Channel is closed now, send is not allowed.");
-        }
-    }
-
-    protected abstract ValueTask<int> SendOverIOAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken);
-
-
-    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
-    {
-        try
-        {
-            await SendLock.WaitAsync().ConfigureAwait(false);
-            var writer = Out.Writer;
-            WriteBuffer(writer, buffer);
-            await writer.FlushAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            SendLock.Release();
-        }
     }
 
     private void WriteBuffer(PipeWriter writer, ReadOnlyMemory<byte> buffer)
@@ -327,68 +204,38 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         writer.Write(buffer.Span);
     }
 
-    public override async ValueTask SendAsync<TPackage>(IPackageEncoder<TPackage> packageEncoder, TPackage package)
-    {
-        try
-        {
-            await SendLock.WaitAsync().ConfigureAwait(false);
-            var writer = Out.Writer;
-            WritePackageWithEncoder<TPackage>(writer, packageEncoder, package);
-            await writer.FlushAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            SendLock.Release();
-        }
-    }
-
-    public override async ValueTask SendAsync(Action<PipeWriter> write)
-    {
-        try
-        {
-            await SendLock.WaitAsync().ConfigureAwait(false);
-            var writer = Out.Writer;
-            write(writer);
-            await writer.FlushAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            SendLock.Release();
-        }
-    }
-
-    protected void WritePackageWithEncoder<TPackage>(IBufferWriter<byte> writer, IPackageEncoder<TPackage> packageEncoder, TPackage package)
+    private void WritePackageWithEncoder<TPackage>(IBufferWriter<byte> writer, IPackageEncoder<TPackage> packageEncoder, TPackage package)
     {
         CheckChannelOpen();
         packageEncoder.Encode(writer, package);
     }
 
-    protected internal ArraySegment<T> GetArrayByMemory<T>(ReadOnlyMemory<T> memory)
+    private async Task ReadPipeAsync(PipeReader reader)
     {
-        if (!MemoryMarshal.TryGetArray(memory, out var result))
-        {
-            throw new InvalidOperationException("Buffer backed by array was expected");
-        }
-
-        return result;
-    }
-
-    protected async Task ReadPipeAsync(PipeReader reader)
-    {
-        var cts = _cts;
-
-        while (!cts.IsCancellationRequested)
+        while (!_connectionToken.IsCancellationRequested)
         {
             ReadResult result;
 
             try
             {
-                result = await reader.ReadAsync(cts.Token).ConfigureAwait(false);
+                result = await reader.ReadAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                if (!IsIgnorableException(e) && !(e is OperationCanceledException))
+                if (!IsIgnorableException(e))
+                {
                     OnError("Failed to read from the pipe", e);
+
+                    if (!CloseReason.HasValue)
+                    {
+                        CloseReason = _connectionToken.IsCancellationRequested
+                            ? SuperSocket.Channel.CloseReason.RemoteClosing : SuperSocket.Channel.CloseReason.SocketError;
+                    }
+                }
+                else if (!CloseReason.HasValue)
+                {
+                    CloseReason = SuperSocket.Channel.CloseReason.Unknown;
+                }
 
                 break;
             }
@@ -399,9 +246,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             SequencePosition examined = buffer.End;
 
             if (result.IsCanceled)
-            {
                 break;
-            }
 
             var completed = result.IsCompleted;
 
@@ -417,16 +262,14 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
                 }
 
                 if (completed)
-                {
                     break;
-                }
             }
             catch (Exception e)
             {
                 OnError("Protocol error", e);
                 // close the connection if get a protocol error
-                CloseReason = Channel.CloseReason.ProtocolError;
-                Close();
+                CloseReason = SuperSocket.Channel.CloseReason.ProtocolError;
+                Close();//解析协议出现异常关闭连接
                 break;
             }
             finally
@@ -439,7 +282,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         WriteEOFPackage();
     }
 
-    protected void WriteEOFPackage()
+    private void WriteEOFPackage()
     {
         _packagePipe.Write(default);
     }
@@ -451,12 +294,14 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
 
         var bytesConsumedTotal = 0L;
 
-        var maxPackageLength = Options.MaxPackageLength;
+        var maxPackageLength = _options.MaxPackageLength;
 
         var seqReader = new SequenceReader<byte>(buffer);
 
         while (true)
         {
+            _connectionToken.ThrowIfCancellationRequested();
+
             var currentPipelineFilter = _pipelineFilter;
             var filterSwitched = false;
 
@@ -483,7 +328,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             if (maxPackageLength > 0 && len > maxPackageLength)
             {
                 OnError($"Package cannot be larger than {maxPackageLength}.");
-                CloseReason = Channel.CloseReason.ProtocolError;
+                CloseReason = SuperSocket.Channel.CloseReason.ProtocolError;
                 // close the the connection directly
                 Close();
                 return false;
@@ -520,20 +365,13 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         }
     }
 
-    public override async ValueTask DetachAsync()
-    {
-        _isDetaching = true;
-        _cts.Cancel();
-        await HandleClosing().ConfigureAwait(false);
-        _isDetaching = false;
-    }
-
-    protected void OnError(string message, Exception e = null)
+    private void OnError(string message, Exception e = null)
     {
         if (e != null)
-            Logger?.LogError(e, message);
+            _logger?.LogError(e, message);
         else
-            Logger?.LogError(message);
+            _logger?.LogError(message);
     }
-}
+
+    #endregion
 }
