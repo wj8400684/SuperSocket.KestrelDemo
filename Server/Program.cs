@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Connections;
 using Server;
+using Server.Commands;
 using SuperSocket;
+using SuperSocket.Command;
 using SuperSocket.Kestrel;
 using SuperSocket.ProtoBase;
 
@@ -18,6 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 //});
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
+    .UseCommand(options => options.AddCommandAssembly(typeof(ADD).Assembly))
     .UseClearIdleSession()
     .UseInProcSessionContainer()
     .UseChannelCreatorFactory<TcpIocpChannelCreatorFactory>()

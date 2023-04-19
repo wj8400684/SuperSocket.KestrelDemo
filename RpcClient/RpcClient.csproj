@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="SuperSocket.Client" Version="2.0.0-beta.16.407" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\RpcCore\RpcCore.csproj" />
+	</ItemGroup>
+
+</Project>
