@@ -1,25 +1,27 @@
 using Microsoft.AspNetCore.Connections;
+using Server;
 using SuperSocket;
 using SuperSocket.Kestrel;
 using SuperSocket.ProtoBase;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var serverOptions = builder.Configuration.GetSection("ServerOptions").Get<ServerOptions>()!;
+//builder.WebHost.ConfigureKestrel((context, options) =>
+//{
+//    var serverOptions = builder.Configuration.GetSection("ServerOptions").Get<ServerOptions>()!;
 
-builder.WebHost.ConfigureKestrel((context, options) =>
-{
-    foreach (var listeners in serverOptions.Listeners)
-    {
-        options.Listen(listeners.GetListenEndPoint(),
-            listenOptions => { listenOptions.UseConnectionHandler<KestrelChannelCreator>(); });
-    }
-});
+//    foreach (var listeners in serverOptions.Listeners)
+//    {
+//        options.Listen(listeners.GetListenEndPoint(),
+//            listenOptions => { listenOptions.UseConnectionHandler<KestrelChannelCreator>(); });
+//    }
+//});
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
     .UseClearIdleSession()
     .UseInProcSessionContainer()
-    .UseKestrelChannelCreatorFactory()
+    .UseChannelCreatorFactory<TcpIocpChannelCreatorFactory>()
+    //.UseKestrelChannelCreatorFactory()
     .AsMinimalApiHostBuilder()
     .ConfigureHostBuilder();
 
