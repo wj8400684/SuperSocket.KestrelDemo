@@ -3,7 +3,7 @@ using System.Threading.Tasks.Sources;
 
 namespace SuperSocket.Kestrel.Channel;
 
-internal sealed class KestrelObjectPipe<T> : IValueTaskSource<T>, IDisposable
+public sealed class KestrelObjectPipe<T> : IValueTaskSource<T>, IDisposable
 {
     class BufferSegment
     {
