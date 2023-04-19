@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Threading.Tasks.Sources;
 
-namespace SuperSocket.Kestrel.Channel;
+namespace SuperSocket.Kestrel.Internal;
 
 public sealed class KestrelObjectPipe<T> : IValueTaskSource<T>, IDisposable
 {
