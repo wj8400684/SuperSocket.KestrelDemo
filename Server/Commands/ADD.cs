@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Server.Commands;
 
-internal sealed class ADD : IAsyncCommand<StringPackageInfo>
+public sealed class ADD : IAsyncCommand<StringPackageInfo>
 {
     async ValueTask IAsyncCommand<IAppSession, StringPackageInfo>.ExecuteAsync(IAppSession session, StringPackageInfo package)
     {

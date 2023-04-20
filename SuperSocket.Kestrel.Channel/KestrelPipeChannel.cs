@@ -5,14 +5,11 @@ using SuperSocket.Kestrel.Internal;
 using SuperSocket.ProtoBase;
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Net.Sockets;
 
 namespace SuperSocket.Kestrel.Channel;
 
-public sealed class KestrelPipeChannel<TPackageInfo> :
-    ChannelBase<TPackageInfo>,
-    IChannel<TPackageInfo>,
-    IChannel,
-    IPipeChannel
+public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
 {
     private bool _isAbort;
     private Task _readsTask;
@@ -42,12 +39,6 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         RemoteEndPoint = context.RemoteEndPoint;
     }
 
-    Pipe IPipeChannel.In => throw new NotImplementedException();
-
-    Pipe IPipeChannel.Out => throw new NotImplementedException();
-
-    IPipelineFilter IPipeChannel.PipelineFilter => _pipelineFilter;
-
     #region public
 
     public override void Start()
@@ -61,7 +52,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         if (_readsTask == null)
             throw new Exception("The channel has not been started yet.");
 
-        while (!_connectionToken.IsCancellationRequested)
+        while (true)
         {
             var package = await _packagePipe.ReadAsync();
 
@@ -70,11 +61,9 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
 
             yield return package;
         }
-
-        ((IDisposable)_packagePipe).Dispose();
     }
 
-    public override ValueTask CloseAsync(CloseReason closeReason)
+    public override async ValueTask CloseAsync(CloseReason closeReason)
     {
         _isAbort = true;
 
@@ -82,7 +71,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
 
         _connection.Abort();
 
-        return ValueTask.CompletedTask;
+        await HandleClosing().ConfigureAwait(false);
     }
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
@@ -171,7 +160,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
                 }
                 catch (Exception exc)
                 {
-                    if (!IsIgnorableException(exc))
+                    if (!IsSocketIgnorableException(exc))
                         OnError("Unhandled exception in the method PipeChannel.Close.", exc);
                 }
             }
@@ -184,9 +173,23 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             _connection.Abort();
     }
 
+    private bool IsSocketIgnorableException(Exception e)
+    {
+        if (IsIgnorableException(e))
+            return true;
+
+        if (e is SocketException se)
+        {
+            if (se.IsIgnorableSocketException())
+                return true;
+        }
+
+        return false;
+    }
+
     private bool IsIgnorableException(Exception e)
     {
-        if (e is ObjectDisposedException || e is NullReferenceException || e is ConnectionAbortedException)
+        if (e is ObjectDisposedException || e is NullReferenceException)
             return true;
 
         if (e.InnerException != null)
@@ -225,7 +228,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
             }
             catch (Exception e)
             {
-                if (!IsIgnorableException(e))
+                if (!IsSocketIgnorableException(e))
                 {
                     OnError("Failed to read from the pipe", e);
 
@@ -274,7 +277,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
                 OnError("Protocol error", e);
                 // close the connection if get a protocol error
                 CloseReason = SuperSocket.Channel.CloseReason.ProtocolError;
-                Close();//解析协议出现异常关闭连接
+                Close();
                 break;
             }
             finally
