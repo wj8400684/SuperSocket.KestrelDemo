@@ -90,6 +90,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
+            LastActiveTime = DateTimeOffset.Now;
             var writer = _writer;
             WriteBuffer(writer, buffer);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -105,6 +106,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
+            LastActiveTime = DateTimeOffset.Now;
             var writer = _writer;
             WritePackageWithEncoder(writer, packageEncoder, package);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -120,6 +122,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
+            LastActiveTime = DateTimeOffset.Now;
             var writer = _writer;
             write(_writer);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -263,6 +266,8 @@ public sealed class KestrelPipeChannel<TPackageInfo> :
 
                 if (completed)
                     break;
+
+                LastActiveTime = DateTimeOffset.Now;
             }
             catch (Exception e)
             {

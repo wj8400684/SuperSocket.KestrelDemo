@@ -27,7 +27,6 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
     private readonly Pipe _out;
     private readonly ILogger _logger;
     private readonly bool _waitForData;
-    private readonly object _shutdownLock = new();
     private readonly ChannelOptions _options;
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private readonly CancellationTokenSource _cts = new();

@@ -49,7 +49,6 @@ internal sealed class TcpIocpChannelWithKestrelCreatorFactory : TcpChannelCreato
             return new ValueTask<IChannel>(channel);
 
         }, logger);
-
     }
 }
 
@@ -142,7 +141,7 @@ internal sealed class TcpIocpChannelCreatorFactory : TcpChannelCreatorFactory, I
                 SendBufferSize = channelOptions.SendBufferSize,
                 SendTimeout = channelOptions.SendTimeout,
                 ReceiveBufferSize = channelOptions.ReceiveBufferSize,
-                Logger = loggerFactory.CreateLogger(nameof(KestrelIOCPChannel<TPackageInfo>)),
+                Logger = channelOptions.Logger,
                 MaxPackageLength = channelOptions.MaxPackageLength,
                 ReadAsDemand = channelOptions.ReadAsDemand,
                 ReceiveTimeout = channelOptions.ReceiveTimeout,
