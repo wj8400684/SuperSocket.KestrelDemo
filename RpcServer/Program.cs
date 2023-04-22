@@ -30,7 +30,7 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseCommand(options => options.AddCommandAssembly(typeof(Login).Assembly))
             .UseClearIdleSession()
             .UseInProcSessionContainer()
-            .UseChannelCreatorFactory<TcpIocpChannelCreatorFactory>()
+            .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
             //.UseKestrelChannelCreatorFactory()
             .AsMinimalApiHostBuilder()
             .ConfigureHostBuilder();

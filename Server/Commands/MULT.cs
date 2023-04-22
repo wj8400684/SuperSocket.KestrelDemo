@@ -13,7 +13,9 @@ public sealed class MULT : IAsyncCommand<StringPackageInfo>
             .Select(p => int.Parse(p))
             .Aggregate((x, y) => x * y);
 
-        await session.SendAsync(Encoding.UTF8.GetBytes(result.ToString() + "\r\n"));
+        var body = Encoding.UTF8.GetBytes($"{nameof(MULT)} {result}\r\n");
+        
+        await session.SendAsync(body);
     }
 }
 

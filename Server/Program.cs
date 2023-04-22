@@ -23,7 +23,7 @@ builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilt
     .UseCommand(options => options.AddCommandAssembly(typeof(ADD).Assembly))
     .UseClearIdleSession()
     .UseInProcSessionContainer()
-    .UseChannelCreatorFactory<TcpIocpChannelCreatorFactory>()
+    .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
     //.UseKestrelChannelCreatorFactory()
     .AsMinimalApiHostBuilder()
     .ConfigureHostBuilder();
