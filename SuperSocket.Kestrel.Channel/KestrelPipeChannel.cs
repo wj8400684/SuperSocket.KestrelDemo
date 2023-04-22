@@ -25,8 +25,8 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
     private readonly KestrelObjectPipe<TPackageInfo> _packagePipe = new();
 
     public KestrelPipeChannel(ConnectionContext context,
-                              IPipelineFilter<TPackageInfo> pipelineFilter,
-                              ChannelOptions options)
+        IPipelineFilter<TPackageInfo> pipelineFilter,
+        ChannelOptions options)
     {
         _options = options;
         _logger = options.Logger;
@@ -178,18 +178,15 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         if (IsIgnorableException(e))
             return true;
 
-        if (e is SocketException se)
-        {
-            if (se.IsIgnorableSocketException())
-                return true;
-        }
+        if (e is SocketException se && se.IsIgnorableSocketException())
+            return true;
 
         return false;
     }
 
-    private bool IsIgnorableException(Exception e)
+    private static bool IsIgnorableException(Exception e)
     {
-        if (e is ObjectDisposedException || e is NullReferenceException)
+        if (e is ObjectDisposedException or NullReferenceException)
             return true;
 
         if (e.InnerException != null)
@@ -215,7 +212,8 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         writer.Write(buffer.Span);
     }
 
-    private void WritePackageWithEncoder<TPackage>(IBufferWriter<byte> writer, IPackageEncoder<TPackage> packageEncoder, TPackage package)
+    private void WritePackageWithEncoder<TPackage>(IBufferWriter<byte> writer, IPackageEncoder<TPackage> packageEncoder,
+        TPackage package)
     {
         ThrowChannelClosed();
         packageEncoder.Encode(writer, package);
@@ -240,7 +238,8 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
                     if (!CloseReason.HasValue)
                     {
                         CloseReason = _connectionToken.IsCancellationRequested
-                            ? SuperSocket.Channel.CloseReason.RemoteClosing : SuperSocket.Channel.CloseReason.SocketError;
+                            ? SuperSocket.Channel.CloseReason.RemoteClosing
+                            : SuperSocket.Channel.CloseReason.SocketError;
                     }
                 }
                 else if (!CloseReason.HasValue)
@@ -266,10 +265,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
                 if (!buffer.IsEmpty)
                 {
                     if (!ReaderBuffer(ref buffer, out consumed, out examined))
-                    {
-                        completed = true;
                         break;
-                    }
                 }
 
                 if (completed)
@@ -300,7 +296,8 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         _packagePipe.Write(default);
     }
 
-    private bool ReaderBuffer(ref ReadOnlySequence<byte> buffer, out SequencePosition consumed, out SequencePosition examined)
+    private bool ReaderBuffer(ref ReadOnlySequence<byte> buffer, out SequencePosition consumed,
+        out SequencePosition examined)
     {
         consumed = buffer.Start;
         examined = buffer.End;
