@@ -79,7 +79,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
-            LastActiveTime = DateTimeOffset.Now;
+            UpdateLastActiveTime();
             var writer = _writer;
             WriteBuffer(writer, buffer);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -95,7 +95,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
-            LastActiveTime = DateTimeOffset.Now;
+            UpdateLastActiveTime();
             var writer = _writer;
             WritePackageWithEncoder(writer, packageEncoder, package);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -111,7 +111,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         try
         {
             await _sendLock.WaitAsync().ConfigureAwait(false);
-            LastActiveTime = DateTimeOffset.Now;
+            UpdateLastActiveTime();
             var writer = _writer;
             write(_writer);
             await writer.FlushAsync().ConfigureAwait(false);
@@ -198,21 +198,26 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
         return false;
     }
 
-    private void CheckChannelOpen()
+    private void ThrowChannelClosed()
     {
         if (IsClosed)
             throw new Exception("Channel is closed now, send is not allowed.");
     }
 
+    private void UpdateLastActiveTime()
+    {
+        LastActiveTime = DateTimeOffset.Now;
+    }
+
     private void WriteBuffer(PipeWriter writer, ReadOnlyMemory<byte> buffer)
     {
-        CheckChannelOpen();
+        ThrowChannelClosed();
         writer.Write(buffer.Span);
     }
 
     private void WritePackageWithEncoder<TPackage>(IBufferWriter<byte> writer, IPackageEncoder<TPackage> packageEncoder, TPackage package)
     {
-        CheckChannelOpen();
+        ThrowChannelClosed();
         packageEncoder.Encode(writer, package);
     }
 
@@ -258,7 +263,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
 
             try
             {
-                if (buffer.Length > 0)
+                if (!buffer.IsEmpty)
                 {
                     if (!ReaderBuffer(ref buffer, out consumed, out examined))
                     {
@@ -270,7 +275,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
                 if (completed)
                     break;
 
-                LastActiveTime = DateTimeOffset.Now;
+                UpdateLastActiveTime();
             }
             catch (Exception e)
             {
