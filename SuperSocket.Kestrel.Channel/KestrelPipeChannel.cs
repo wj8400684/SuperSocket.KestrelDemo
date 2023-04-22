@@ -71,18 +71,17 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
 
         _connection.Abort();
 
-        await HandleClosing().ConfigureAwait(false);
+        await HandleClosing();
     }
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
     {
         try
         {
-            await _sendLock.WaitAsync().ConfigureAwait(false);
+            await _sendLock.WaitAsync();
             UpdateLastActiveTime();
-            var writer = _writer;
-            WriteBuffer(writer, buffer);
-            await writer.FlushAsync().ConfigureAwait(false);
+            WriteBuffer(_writer, buffer);
+            await _writer.FlushAsync();
         }
         finally
         {
@@ -94,11 +93,10 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
     {
         try
         {
-            await _sendLock.WaitAsync().ConfigureAwait(false);
+            await _sendLock.WaitAsync();
             UpdateLastActiveTime();
-            var writer = _writer;
-            WritePackageWithEncoder(writer, packageEncoder, package);
-            await writer.FlushAsync().ConfigureAwait(false);
+            WritePackageWithEncoder(_writer, packageEncoder, package);
+            await _writer.FlushAsync();
         }
         finally
         {
@@ -110,11 +108,10 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
     {
         try
         {
-            await _sendLock.WaitAsync().ConfigureAwait(false);
+            await _sendLock.WaitAsync();
             UpdateLastActiveTime();
-            var writer = _writer;
             write(_writer);
-            await writer.FlushAsync().ConfigureAwait(false);
+            await _writer.FlushAsync();
         }
         finally
         {
@@ -133,14 +130,14 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
 
     private async void WaitHandleClosing()
     {
-        await HandleClosing().ConfigureAwait(false);
+        await HandleClosing();
     }
 
     private async Task HandleClosing()
     {
         try
         {
-            await _readsTask.ConfigureAwait(false);
+            await _readsTask;
         }
         catch (OperationCanceledException)
         {
@@ -227,7 +224,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
 
             try
             {
-                result = await reader.ReadAsync().ConfigureAwait(false);
+                result = await reader.ReadAsync();
             }
             catch (Exception e)
             {
@@ -235,12 +232,9 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
                 {
                     OnError("Failed to read from the pipe", e);
 
-                    if (!CloseReason.HasValue)
-                    {
-                        CloseReason = _connectionToken.IsCancellationRequested
-                            ? SuperSocket.Channel.CloseReason.RemoteClosing
-                            : SuperSocket.Channel.CloseReason.SocketError;
-                    }
+                    CloseReason ??= _connectionToken.IsCancellationRequested
+                        ? SuperSocket.Channel.CloseReason.RemoteClosing
+                        : SuperSocket.Channel.CloseReason.SocketError;
                 }
                 else if (!CloseReason.HasValue)
                 {
