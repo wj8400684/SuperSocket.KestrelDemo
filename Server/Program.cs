@@ -21,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.AsSuperSocketHostBuilder<StringPackageInfo, CommandLinePipelineFilter>()
     .UseCommand(options => options.AddCommandAssembly(typeof(ADD).Assembly))
+    .UsePackageDecoder<DefaultStringPackageDecoder1>()
     .UseClearIdleSession()
     .UseInProcSessionContainer()
     .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()

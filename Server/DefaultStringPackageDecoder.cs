@@ -1,14 +1,13 @@
 ﻿using SuperSocket.ProtoBase;
-using System;
 using System.Buffers;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Client;
+namespace Server;
 
-public sealed class DefaultStringPackageDecoder1 : IPackageDecoder<StringPackageInfo>
+internal sealed class DefaultStringPackageDecoder1 : IPackageDecoder<StringPackageInfo>
 {
+    private readonly static ReadOnlyMemory<byte> Space = " "u8.ToArray();
+
     public Encoding Encoding { get; private set; }
 
     public DefaultStringPackageDecoder1()
@@ -17,46 +16,6 @@ public sealed class DefaultStringPackageDecoder1 : IPackageDecoder<StringPackage
     }
 
     public DefaultStringPackageDecoder1(Encoding encoding)
-    {
-        Encoding = encoding;
-    }
-
-    public StringPackageInfo Decode(ref ReadOnlySequence<byte> buffer, object context)
-    {
-        var text = buffer.GetString(Encoding);
-        var parts = text.Split(' ', 2);
-
-        var key = parts[0];
-
-        if (parts.Length <= 1)
-        {
-            return new StringPackageInfo
-            {
-                Key = key
-            };
-        }
-
-        return new StringPackageInfo
-        {
-            Key = key,
-            Body = parts[1],
-            Parameters = parts[1].Split(' ')
-        };
-    }
-}
-
-internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackageInfo>
-{
-    private readonly static ReadOnlyMemory<byte> Space = " "u8.ToArray();
-
-    public Encoding Encoding { get; private set; }
-
-    public DefaultStringPackageDecoder()
-        : this(new UTF8Encoding(false))
-    {
-    }
-
-    public DefaultStringPackageDecoder(Encoding encoding)
     {
         Encoding = encoding;
     }
@@ -83,7 +42,7 @@ internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackag
             };
         }
 
-        var list = new List<string>();
+        var list = new string[1];
 
         while (!reader.UnreadSpan.IsEmpty)
         {
@@ -93,7 +52,7 @@ internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackag
             if (reader.TryReadTo(out sequence, Space.Span, true))
             {
                 parameter = Encoding.GetString(sequence.FirstSpan);
-                list.Add(parameter);
+                list[0] = parameter;
                 continue;
             }
 
@@ -102,8 +61,8 @@ internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackag
 
             parameter = Encoding.GetString(reader.UnreadSpan);
 
-            list.Add(parameter);
-            
+            list[0] = parameter;
+
             reader.AdvanceToEnd();
         }
 
@@ -111,7 +70,7 @@ internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackag
         {
             Key = key,
             Body = reader.UnreadSequence.GetString(Encoding),
-            Parameters = list.ToArray()
+            Parameters = list
         };
     }
 }

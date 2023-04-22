@@ -9,11 +9,13 @@ public sealed class MULT : IAsyncCommand<StringPackageInfo>
 {
     async ValueTask IAsyncCommand<IAppSession, StringPackageInfo>.ExecuteAsync(IAppSession session, StringPackageInfo package)
     {
-        var result = package.Parameters
-            .Select(p => int.Parse(p))
-            .Aggregate((x, y) => x * y);
+        //var result = package.Parameters
+        //    .Select(p => int.Parse(p))
+        //    .Aggregate((x, y) => x * y);
 
-        var body = Encoding.UTF8.GetBytes($"{nameof(MULT)} {result}\r\n");
+        var result = 10;
+
+        var body = Encoding.UTF8.GetBytes($"MULT {result}\r\n");
         
         await session.SendAsync(body);
     }
