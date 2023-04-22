@@ -11,7 +11,7 @@ public sealed class ADD : IAsyncCommand<StringPackageInfo>
     {
         var result = package.Parameters.Select(p => int.Parse(p)).Sum();
 
-        var body = Encoding.UTF8.GetBytes($"{nameof(ADD)} {result} 5\r\n");
+        var body = Encoding.UTF8.GetBytes($"{nameof(ADD)} {result}\r\n");
         
         await session.SendAsync(body);
     }

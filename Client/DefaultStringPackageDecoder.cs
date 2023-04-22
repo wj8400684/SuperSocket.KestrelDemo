@@ -45,20 +45,6 @@ internal sealed class DefaultStringPackageDecoder : IPackageDecoder<StringPackag
             };
         }
 
-        //是否具有多个参数
-        if (reader.UnreadSpan.IndexOf(Spen.Span) == -1)
-        {
-            //只有一个参数
-            var body = reader.UnreadSequence.GetString(Encoding);
-
-            return new StringPackageInfo
-            {
-                Key = key,
-                Body = body,
-                Parameters = new[] { body }
-            };
-        }
-
         var list = new List<string>();
 
         while (!reader.UnreadSpan.IsEmpty)
