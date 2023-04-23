@@ -160,7 +160,6 @@ public sealed class KestrelObjectPipe<T> : IValueTaskSource<T>, IDisposable
 
     private void OnWaitTaskStart()
     {
-
     }
 
     T IValueTaskSource<T>.GetResult(short token)
