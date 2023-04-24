@@ -184,7 +184,7 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
                 }
                 catch (Exception exc)
                 {
-                    if (!IsIgnorableException(exc))
+                    if (!IsSocketIgnorableException(exc))
                         OnError("Unhandled exception in the method PipeChannel.Close.", exc);
                 }
             }
@@ -264,7 +264,7 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
             }
             catch (Exception e)
             {
-                if (!IsIgnorableException(e))
+                if (!IsSocketIgnorableException(e))
                 {
                     if (e is not OperationCanceledException)
                         OnError("Exception happened in ReceiveAsync", e);
@@ -333,7 +333,13 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
                     var transferResult = await _sender.SendAsync(_socket, buffer);
 
                     if (transferResult.HasError)
-                        throw transferResult.SocketError;
+                    {
+                        if (IsConnectionResetError(transferResult.SocketError.SocketErrorCode))
+                            throw transferResult.SocketError;
+
+                        if (IsConnectionAbortError(transferResult.SocketError.SocketErrorCode))
+                            throw transferResult.SocketError;
+                    }
 
                     _socketSenderPool.Return(_sender);
 
@@ -345,7 +351,7 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
                 {
                     cts?.Cancel(false);
 
-                    if (!IsIgnorableException(e))
+                    if (!IsSocketIgnorableException(e))
                         OnError("Exception happened in SendAsync", e);
 
                     break;
@@ -374,18 +380,17 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
     /// <returns></returns>
     private async Task ReadPipeAsync(PipeReader reader)
     {
-        var cts = _cts;
         ReadResult result;
 
-        while (!cts.IsCancellationRequested)
+        while (!_cts.IsCancellationRequested)
         {
             try
             {
-                result = await reader.ReadAsync(cts.Token).ConfigureAwait(false);
+                result = await reader.ReadAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                if (!IsIgnorableException(e) && e is not OperationCanceledException)
+                if (!IsSocketIgnorableException(e) && e is not OperationCanceledException)
                     OnError("Failed to read from the pipe", e);
 
                 break;
@@ -530,9 +535,20 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
             throw new Exception("Channel is closed now, send is not allowed.");
     }
 
-    private bool IsIgnorableException(Exception e)
+    private static bool IsSocketIgnorableException(Exception e)
     {
-        if (e is ObjectDisposedException or NullReferenceException or SocketException)
+        if (IsIgnorableException(e))
+            return true;
+
+        if (e is SocketException se && se.IsIgnorableSocketException())
+            return true;
+
+        return false;
+    }
+
+    private static bool IsIgnorableException(Exception e)
+    {
+        if (e is ObjectDisposedException or NullReferenceException)
             return true;
 
         if (e.InnerException != null)
@@ -540,6 +556,7 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
 
         return false;
     }
+
 
     private static bool IsNormalCompletion(SocketOperationResult result)
     {

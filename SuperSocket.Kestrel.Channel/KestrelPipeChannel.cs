@@ -170,7 +170,7 @@ public sealed class KestrelPipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>
             _connection.Abort();
     }
 
-    private bool IsSocketIgnorableException(Exception e)
+    private static bool IsSocketIgnorableException(Exception e)
     {
         if (IsIgnorableException(e))
             return true;
