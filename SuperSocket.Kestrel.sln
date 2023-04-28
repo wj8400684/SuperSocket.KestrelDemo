@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.IOCPTcpChannel"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.IOCPTcpChannelCreatorFactory", "SuperSocket.IOCPTcpChannelCreatorFactory\SuperSocket.IOCPTcpChannelCreatorFactory.csproj", "{7008ED1D-7067-417F-A44A-7285094AB4EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.IOCPTcpEasyClient", "SuperSocket.IOCPTcpEasyClient\SuperSocket.IOCPTcpEasyClient.csproj", "{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{7008ED1D-7067-417F-A44A-7285094AB4EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7008ED1D-7067-417F-A44A-7285094AB4EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7008ED1D-7067-417F-A44A-7285094AB4EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -98,6 +104,7 @@ Global
 		{63125D1B-08FB-4D63-BD90-F20D9E2D63BE} = {ED07986E-7654-470F-90C1-46C296848524}
 		{2E52F865-B6E8-4263-B202-991287F27E06} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
 		{7008ED1D-7067-417F-A44A-7285094AB4EB} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
+		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD7A2BF5-E8EA-40EE-9F17-B5FB9DD872B2}

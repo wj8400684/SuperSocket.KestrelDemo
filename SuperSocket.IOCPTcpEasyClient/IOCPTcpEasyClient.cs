@@ -73,12 +73,10 @@ public class IOCPTcpEasyClient<TPackage> : EasyClient<TPackage>
             return false;
         }
 
-        var socket = state.Socket;
-
-        if (socket == null)
-            throw new Exception("Socket is null.");
+        var socket = state.Socket ?? throw new Exception("Socket is null.");
 
         var channelOptions = Options;
+
         SetupChannel(new IOCPTcpPipeChannel<TPackage>(socket, _pipelineFilter, channelOptions, new SocketSenderPool(PipeScheduler.ThreadPool), PipeScheduler.ThreadPool));
         return true;
     }
