@@ -4,6 +4,7 @@ using SuperSocket;
 using SuperSocket.Command;
 using SuperSocket.Kestrel;
 using SuperSocket.ProtoBase;
+using SuperSocket.IOCPTcpChannelCreatorFactory;
 using RpcServer.Abp;
 using Server;
 using RpcServer.Abp.Commands;
@@ -30,8 +31,8 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseCommand(options => options.AddCommandAssembly(typeof(Login).Assembly))
             .UseClearIdleSession()
             .UseInProcSessionContainer()
-            .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
-            //.UseKestrelChannelCreatorFactory()
+            //.UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
+            .UseIOCPTcpChannelCreatorFactory()
             .AsMinimalApiHostBuilder()
             .ConfigureHostBuilder();
 

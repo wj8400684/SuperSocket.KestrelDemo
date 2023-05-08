@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\RpcCore\RpcCore.csproj" />
+		<ProjectReference Include="..\SuperSocket.IOCPTcpChannelCreatorFactory\SuperSocket.IOCPTcpChannelCreatorFactory.csproj" />
 		<ProjectReference Include="..\SuperSocket.Kestrel\SuperSocket.Kestrel.csproj" />
 	</ItemGroup>
 

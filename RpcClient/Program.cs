@@ -3,16 +3,16 @@ using SuperSocket.Client;
 using System.Diagnostics;
 using System.Net;
 
-var easyClient = new EasyClient<RpcPackageBase, RpcPackageBase>(new RpcPipeLineFilter(), new RpcPackageEncode()).AsClient();
+IEasyClient<RpcPackageBase, RpcPackageBase> easyClient = new SuperSocket.IOCPEasyClient.IOCPTcpEasyClient<RpcPackageBase, RpcPackageBase>(new RpcPipeLineFilter(), new RpcPackageEncode());
 
 await easyClient.ConnectAsync(new DnsEndPoint("127.0.0.1", 4040, System.Net.Sockets.AddressFamily.InterNetwork), CancellationToken.None);
 
 var watch = new Stopwatch();
 watch.Start();
 
-Console.WriteLine("请输入发送次数，不输入默认为500w次按enter ");
+Console.WriteLine("请输入发送次数，不输入默认为100w次按enter ");
 
-var count = 5000 * 1000;
+var count = 1000 * 1000;
 
 var input = Console.ReadLine();
 

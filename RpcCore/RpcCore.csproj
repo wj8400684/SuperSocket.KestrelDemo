@@ -7,6 +7,6 @@
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="MemoryPack" Version="1.9.13" />
-		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.16.407" />
+		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.16.411" />
 	</ItemGroup>
 </Project>

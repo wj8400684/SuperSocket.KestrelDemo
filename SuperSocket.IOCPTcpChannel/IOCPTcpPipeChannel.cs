@@ -18,7 +18,6 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     private readonly bool _waitForData;
     private readonly SocketReceiver _receiver;
     private readonly SocketSenderPool _socketSenderPool;
-    private readonly CancellationTokenSource _cts;
 
     public IOCPTcpPipeChannel(Socket socket,
                               IPipelineFilter<TPackageInfo> pipelineFilter,
@@ -34,12 +33,6 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
         _waitForData = waitForData;
         _receiver = new SocketReceiver(socketScheduler);
         _socketSenderPool = socketSenderPool;
-
-        const string fieldName = "_cts";
-
-        var field = GetType().BaseType!.BaseType!.GetField(fieldName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-
-        _cts = (CancellationTokenSource)field!.GetValue(this)!;
     }
 
     public override async ValueTask CloseAsync(CloseReason closeReason)
@@ -55,24 +48,24 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     /// <param name="memory"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected override ValueTask<int> FillPipeWithDataAsync(Memory<byte> memory, CancellationToken cancellationToken)
+    protected async override ValueTask<int> FillPipeWithDataAsync(Memory<byte> memory, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-        //if (_waitForData)
-        //{
-        //    // Wait for data before allocating a buffer.
-        //    var waitForDataResult = await _receiver.WaitForDataAsync(_socket!).ConfigureAwait(false);
+        //throw new NotImplementedException();
+        if (_waitForData)
+        {
+            // Wait for data before allocating a buffer.
+            var waitForDataResult = await _receiver.WaitForDataAsync(_socket!).ConfigureAwait(false);
 
-        //    if (waitForDataResult.HasError)
-        //        throw waitForDataResult.SocketError;
-        //}
+            if (waitForDataResult.HasError)
+                throw waitForDataResult.SocketError;
+        }
 
-        //var receiveResult = await _receiver.ReceiveAsync(_socket!, memory).ConfigureAwait(false);
+        var receiveResult = await _receiver.ReceiveAsync(_socket!, memory).ConfigureAwait(false);
 
-        //if (receiveResult.HasError)
-        //    throw receiveResult.SocketError;
+        if (receiveResult.HasError)
+            throw receiveResult.SocketError;
 
-        //return receiveResult.BytesTransferred;
+        return receiveResult.BytesTransferred;
     }
 
     /// <summary>
@@ -81,27 +74,27 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     /// <param name="buffer"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected override ValueTask<int> SendOverIOAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+    protected async override ValueTask<int> SendOverIOAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-        //_sender = _socketSenderPool.Rent();
+        //throw new NotImplementedException();
+        _sender = _socketSenderPool.Rent();
 
-        //var transferResult = await _sender.SendAsync(_socket!, buffer).ConfigureAwait(false);
+        var transferResult = await _sender.SendAsync(_socket!, buffer).ConfigureAwait(false);
 
-        //if (transferResult.HasError)
-        //{
-        //    if (IsConnectionResetError(transferResult.SocketError.SocketErrorCode))
-        //        throw transferResult.SocketError;
+        if (transferResult.HasError)
+        {
+            if (IsConnectionResetError(transferResult.SocketError.SocketErrorCode))
+                throw transferResult.SocketError;
 
-        //    if (IsConnectionAbortError(transferResult.SocketError.SocketErrorCode))
-        //        throw transferResult.SocketError;
-        //}
+            if (IsConnectionAbortError(transferResult.SocketError.SocketErrorCode))
+                throw transferResult.SocketError;
+        }
 
-        //_socketSenderPool.Return(_sender);
+        _socketSenderPool.Return(_sender);
 
-        //_sender = null;
+        _sender = null;
 
-        //return transferResult.BytesTransferred;
+        return transferResult.BytesTransferred;
     }
 
     /// <summary>
@@ -147,7 +140,7 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
                 }
                 catch (Exception e)
                 {
-                    _cts.Cancel(false);
+                    Cancel();
 
                     if (!IsIgnorableException(e))
                         OnError("Exception happened in SendAsync", e);
@@ -169,13 +162,13 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     /// 从socket中读取数据流然后写入 pipeline
     /// </summary>
     /// <param name="writer"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected override async Task FillPipeAsync(PipeWriter writer)
+    protected override async Task FillPipeAsync(PipeWriter writer, CancellationToken cancellationToken)
     {
-        var cts = _cts;
         var socket = _socket!;
 
-        while (!cts.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
@@ -224,7 +217,7 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 
                     if (!CloseReason.HasValue)
                     {
-                        CloseReason = cts.IsCancellationRequested
+                        CloseReason = cancellationToken.IsCancellationRequested
                             ? Channel.CloseReason.LocalClosing : Channel.CloseReason.SocketError;
                     }
                 }
@@ -251,7 +244,6 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 
     protected override void OnClosed()
     {
-        _cts.Dispose();
         _socket?.Dispose();
         _sender?.Dispose();
         _receiver.Dispose();

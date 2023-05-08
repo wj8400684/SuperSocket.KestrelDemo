@@ -9,8 +9,8 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="7.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-		<PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta.16.407" />
-		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.16.407" />
+		<PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta.16.411" />
+		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.16.411" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SuperSocket.Kestrel.IOCP\SuperSocket.Kestrel.IOCP.csproj" />
