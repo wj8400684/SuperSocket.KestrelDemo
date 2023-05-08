@@ -60,6 +60,8 @@ public abstract class RpcPackageBase : IKeyedPackageInfo<CommandKey>
     [MemoryPackIgnore]
     public CommandKey Key { get; set; }
 
+    public ulong Identifier { get; set; }
+
     public virtual int Encode(IBufferWriter<byte> bufWriter)
     {
         using var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Utf8);
@@ -92,28 +94,6 @@ public abstract class RpcRespPackage : RpcPackageBase
 
     protected RpcRespPackage(CommandKey key)
         : base(key)
-    {
-    }
-}
-
-public abstract class RpcPackageWithIdentifier : RpcPackageBase
-{
-    public ulong Identifier { get; set; }
-
-    protected RpcPackageWithIdentifier(CommandKey key) : base(key)
-    {
-    }
-}
-
-public abstract class RpcRespPackageWithIdentifier : RpcPackageWithIdentifier
-{
-    public string? ErrorMessage { get; set; }
-
-    public bool SuccessFul { get; set; }
-
-    public int ErrorCode { get; set; }
-
-    protected RpcRespPackageWithIdentifier(CommandKey key) : base(key)
     {
     }
 }

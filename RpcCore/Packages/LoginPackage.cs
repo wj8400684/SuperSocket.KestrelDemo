@@ -4,7 +4,7 @@ using System.Buffers;
 namespace RpcCore;
 
 [MemoryPackable]
-public sealed partial class LoginPackage : RpcPackageWithIdentifier
+public sealed partial class LoginPackage : RpcPackageBase
 {
     public LoginPackage() : base(CommandKey.Login)
     {
@@ -26,7 +26,7 @@ public sealed partial class LoginPackage : RpcPackageWithIdentifier
 }
 
 [MemoryPackable]
-public sealed partial class LoginRespPackage : RpcRespPackageWithIdentifier
+public sealed partial class LoginRespPackage : RpcRespPackage
 {
     public LoginRespPackage() : base(CommandKey.LoginAck)
     {

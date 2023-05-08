@@ -11,6 +11,8 @@ public sealed partial class InvokerPackage : RpcPackageBase
     {
     }
 
+    public CommandKey Command { get; set; }
+
     public ReadOnlyMemory<byte> Body { get; set; }
 
     public override int Encode(IBufferWriter<byte> bufWriter)
@@ -33,4 +35,8 @@ public sealed partial class InvokerRespPackage : RpcRespPackage
         : base(CommandKey.InvokerAck)
     {
     }
+
+    public CommandKey Command { get; set; }
+
+    public ReadOnlyMemory<byte> Body { get; set; }
 }

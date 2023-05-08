@@ -304,10 +304,6 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
         await Task.WhenAll(reading, writing).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 从输出pipeline中读取数据流然后写入socket
-    /// </summary>
-    /// <returns></returns>
     private async Task ProcessSendsAsync()
     {
         var output = _out.Reader;

@@ -31,12 +31,14 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseCommand(options => options.AddCommandAssembly(typeof(Login).Assembly))
             .UseClearIdleSession()
             .UseInProcSessionContainer()
-            //.UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
-            .UseIOCPTcpChannelCreatorFactory()
+            .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
+            //.UseIOCPTcpChannelCreatorFactory()
             .AsMinimalApiHostBuilder()
             .ConfigureHostBuilder();
 
+builder.Services.AddHostedService<PackageHostServer>();
 builder.Services.AddLogging(s => s.AddConsole().AddDebug());
+builder.Services.AddSingleton<IPacketFactoryPool, DefaultPacketFactoryPool>();
 builder.Services.AddSingleton<IPackageEncoder<RpcPackageBase>, RpcPackageEncode>();
 
 var app = builder.Build();

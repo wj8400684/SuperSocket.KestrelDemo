@@ -2,7 +2,6 @@
 using SuperSocket.Kestrel.Application;
 using SuperSocket.ProtoBase;
 using System;
-using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Sockets;
 using System.Threading;
@@ -12,8 +11,8 @@ namespace SuperSocket.IOCPTcpChannel;
 
 public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 {
-    private Socket? _socket;
     private SocketSender? _sender;
+    private readonly Socket _socket;
     private readonly bool _waitForData;
     private readonly SocketReceiver _receiver;
     private readonly SocketSenderPool _socketSenderPool;
@@ -30,80 +29,27 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 
         _socket = socket;
         _waitForData = waitForData;
-        _receiver = new SocketReceiver(socketScheduler);
         _socketSenderPool = socketSenderPool;
+        _receiver = new SocketReceiver(socketScheduler);
     }
 
     public override async ValueTask CloseAsync(CloseReason closeReason)
     {
+        //Close Socket
         base.Close();
 
+        //Wait for the read task and send the task to end
         await base.CloseAsync(closeReason);
     }
 
     /// <summary>
-    /// 从socket中接受数据流然后写入memory
-    /// </summary>
-    /// <param name="memory"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    protected async override ValueTask<int> FillPipeWithDataAsync(Memory<byte> memory, CancellationToken cancellationToken)
-    {
-        //throw new NotImplementedException();
-        if (_waitForData)
-        {
-            // Wait for data before allocating a buffer.
-            var waitForDataResult = await _receiver.WaitForDataAsync(_socket!).ConfigureAwait(false);
-
-            if (waitForDataResult.HasError)
-                throw waitForDataResult.SocketError;
-        }
-
-        var receiveResult = await _receiver.ReceiveAsync(_socket!, memory).ConfigureAwait(false);
-
-        if (receiveResult.HasError)
-            throw receiveResult.SocketError;
-
-        return receiveResult.BytesTransferred;
-    }
-
-    /// <summary>
-    /// 发送数据至socket
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    protected async override ValueTask<int> SendOverIOAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
-    {
-        //throw new NotImplementedException();
-        _sender = _socketSenderPool.Rent();
-
-        var transferResult = await _sender.SendAsync(_socket!, buffer).ConfigureAwait(false);
-
-        if (transferResult.HasError)
-        {
-            if (IsConnectionResetError(transferResult.SocketError.SocketErrorCode))
-                throw transferResult.SocketError;
-
-            if (IsConnectionAbortError(transferResult.SocketError.SocketErrorCode))
-                throw transferResult.SocketError;
-        }
-
-        _socketSenderPool.Return(_sender);
-
-        _sender = null;
-
-        return transferResult.BytesTransferred;
-    }
-
-    /// <summary>
-    /// 从pipeline中读取数据然后发送至socket
+    /// Read data from the pipeline and send it to the socket
     /// </summary>
     /// <returns></returns>
     protected override async Task ProcessSends()
     {
         var output = Out.Reader;
-        var socket = _socket!;
+        var socket = _socket;
 
         while (true)
         {
@@ -158,14 +104,14 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     }
 
     /// <summary>
-    /// 从socket中读取数据流然后写入 pipeline
+    /// Read the data stream from the socket and write it to the pipeline
     /// </summary>
     /// <param name="writer"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     protected override async Task FillPipeAsync(PipeWriter writer, CancellationToken cancellationToken)
     {
-        var socket = _socket!;
+        var socket = _socket;
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -243,7 +189,6 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 
     protected override void OnClosed()
     {
-        _socket?.Dispose();
         _sender?.Dispose();
         _receiver.Dispose();
         base.OnClosed();

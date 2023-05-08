@@ -77,7 +77,7 @@ public sealed class PacketDispatcher : IDisposable
         }
     }
 
-    public bool TryDispatch(RpcRespPackageWithIdentifier packet)
+    public bool TryDispatch(RpcPackageBase packet)
     {
         ArgumentNullException.ThrowIfNull(packet);
 

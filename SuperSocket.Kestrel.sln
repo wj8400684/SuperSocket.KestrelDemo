@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F07A96AA-D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6407CCA7-C4EB-4525-92BE-F125ED37356F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpc", "rpc", "{ED07986E-7654-470F-90C1-46C296848524}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpcForMemoryPack", "rpcForMemoryPack", "{ED07986E-7654-470F-90C1-46C296848524}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcServer.Abp", "RpcServer\RpcServer.Abp.csproj", "{FA7D6DE1-F68F-47A4-9349-3007143BB368}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperSocket.IOCPTcpEasyClient", "SuperSocket.IOCPTcpEasyClient\SuperSocket.IOCPTcpEasyClient.csproj", "{02097B80-A4CE-4992-B8D6-61BAEF8F2E00}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperSocket.Kestrel.Application", "SuperSocket.Kestrel.Application\SuperSocket.Kestrel.Application.csproj", "{77714B70-0441-45C1-B40C-6F1502D9BB9B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpcForMessagePack", "rpcForMessagePack", "{AC6DCF9A-65BE-49D5-AF1F-61D025386362}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +107,7 @@ Global
 		{7008ED1D-7067-417F-A44A-7285094AB4EB} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
 		{02097B80-A4CE-4992-B8D6-61BAEF8F2E00} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
 		{77714B70-0441-45C1-B40C-6F1502D9BB9B} = {6407CCA7-C4EB-4525-92BE-F125ED37356F}
+		{AC6DCF9A-65BE-49D5-AF1F-61D025386362} = {F07A96AA-D38C-4EC5-82BA-E35354E42290}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD7A2BF5-E8EA-40EE-9F17-B5FB9DD872B2}

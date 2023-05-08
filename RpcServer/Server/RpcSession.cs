@@ -69,9 +69,9 @@ public sealed class RpcSession : AppSession
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     internal ValueTask<TResponsePacket> GetResponsePacketAsync<TResponsePacket>(
-         RpcPackageWithIdentifier package,
+         RpcPackageBase package,
          TimeSpan responseTimeout,
-         CancellationToken cancellationToken) where TResponsePacket : RpcRespPackageWithIdentifier
+         CancellationToken cancellationToken) where TResponsePacket : RpcRespPackage
     {
         using var timeOut = new CancellationTokenSource(responseTimeout);
         return GetResponsePacketAsync<TResponsePacket>(package, ConnectionToken, cancellationToken, timeOut.Token);
@@ -85,8 +85,8 @@ public sealed class RpcSession : AppSession
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     internal ValueTask<TResponsePacket> GetResponsePacketAsync<TResponsePacket>(
-         RpcPackageWithIdentifier package,
-         CancellationToken cancellationToken) where TResponsePacket : RpcRespPackageWithIdentifier
+         RpcPackageBase package,
+         CancellationToken cancellationToken) where TResponsePacket : RpcRespPackage
     {
         return GetResponsePacketAsync<TResponsePacket>(package, ConnectionToken, cancellationToken);
     }
@@ -99,8 +99,8 @@ public sealed class RpcSession : AppSession
     /// <param name="tokens"></param>
     /// <returns></returns>
     internal async ValueTask<TResponsePacket> GetResponsePacketAsync<TResponsePacket>(
-        RpcPackageWithIdentifier package,
-        params CancellationToken[] tokens) where TResponsePacket : RpcRespPackageWithIdentifier
+        RpcPackageBase package,
+        params CancellationToken[] tokens) where TResponsePacket : RpcRespPackage
     {
         using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(tokens);
 
@@ -140,7 +140,7 @@ public sealed class RpcSession : AppSession
     /// </summary>
     /// <param name="package"></param>
     /// <returns></returns>
-    internal ValueTask TryDispatchAsync(RpcRespPackageWithIdentifier package)
+    internal ValueTask TryDispatchAsync(RpcPackageBase package)
     {
         var result = _packetDispatcher.TryDispatch(package);
 
