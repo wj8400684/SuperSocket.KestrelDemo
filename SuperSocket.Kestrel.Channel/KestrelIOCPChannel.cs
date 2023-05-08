@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
+using SuperSocket.Kestrel.Application;
 using SuperSocket.Kestrel.Internal;
-using SuperSocket.Kestrel.IOCP;
 using SuperSocket.ProtoBase;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 
 namespace SuperSocket.Kestrel.Channel;
 

@@ -2,7 +2,7 @@
 using SuperSocket.Channel;
 using SuperSocket.Client;
 using SuperSocket.IOCPTcpChannel;
-using SuperSocket.Kestrel.IOCP;
+using SuperSocket.Kestrel.Application;
 using SuperSocket.ProtoBase;
 using System.IO.Pipelines;
 using System.Net;

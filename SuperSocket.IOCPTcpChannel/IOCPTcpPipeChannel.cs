@@ -1,11 +1,10 @@
 ﻿using SuperSocket.Channel;
-using SuperSocket.Kestrel.IOCP;
+using SuperSocket.Kestrel.Application;
 using SuperSocket.ProtoBase;
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 

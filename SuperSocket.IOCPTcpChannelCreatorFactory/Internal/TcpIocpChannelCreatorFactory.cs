@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SuperSocket.Channel;
 using SuperSocket.IOCPTcpChannel;
-using SuperSocket.Kestrel.IOCP;
+using SuperSocket.Kestrel.Application;
 using SuperSocket.ProtoBase;
 using SuperSocket.Server;
 
