@@ -49,7 +49,6 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
     protected override async Task ProcessSends()
     {
         var output = Out.Reader;
-        var socket = _socket;
 
         while (true)
         {
@@ -66,7 +65,7 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
                 {
                     _sender = _socketSenderPool.Rent();
 
-                    var transferResult = await _sender.SendAsync(socket, buffer).ConfigureAwait(false);
+                    var transferResult = await _sender.SendAsync(_socket, buffer).ConfigureAwait(false);
 
                     if (transferResult.HasError)
                     {
@@ -142,8 +141,7 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
 
                 if (bytesRead == 0)
                 {
-                    if (!CloseReason.HasValue)
-                        CloseReason = Channel.CloseReason.RemoteClosing;
+                    CloseReason ??= Channel.CloseReason.RemoteClosing;
 
                     break;
                 }
@@ -160,11 +158,9 @@ public class IOCPTcpPipeChannel<TPackageInfo> : TcpPipeChannel<TPackageInfo>
                     if (e is not OperationCanceledException)
                         OnError("Exception happened in ReceiveAsync", e);
 
-                    if (!CloseReason.HasValue)
-                    {
-                        CloseReason = cancellationToken.IsCancellationRequested
-                            ? Channel.CloseReason.LocalClosing : Channel.CloseReason.SocketError;
-                    }
+                    CloseReason ??= cancellationToken.IsCancellationRequested
+                        ? Channel.CloseReason.LocalClosing
+                        : Channel.CloseReason.SocketError;
                 }
                 else if (!CloseReason.HasValue)
                 {

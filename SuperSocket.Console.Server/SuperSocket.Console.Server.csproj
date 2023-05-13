@@ -21,6 +21,13 @@
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
+	<ItemGroup>
+	  <Content Update="Properties\launchSettings.json">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	    <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+	  </Content>
+	</ItemGroup>
 	<PropertyGroup>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 	</PropertyGroup>

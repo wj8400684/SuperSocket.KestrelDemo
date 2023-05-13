@@ -3,10 +3,10 @@
     "RpcServer.Abp": {
       "commandName": "Project",
       "launchBrowser": true,
+      "applicationUrl": "https://localhost:52967;http://localhost:52968",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:52967;http://localhost:52968"
+      }
     }
   }
 }

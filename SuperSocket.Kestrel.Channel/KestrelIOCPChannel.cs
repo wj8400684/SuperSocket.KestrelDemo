@@ -224,7 +224,6 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
             try
             {
                 var bufferSize = options.ReceiveBufferSize;
-                var maxPackageLength = options.MaxPackageLength;
 
                 if (bufferSize <= 0)
                     bufferSize = 1024 * 4; //4k
@@ -249,8 +248,7 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
 
                 if (bytesRead == 0)
                 {
-                    if (!CloseReason.HasValue)
-                        CloseReason = SuperSocket.Channel.CloseReason.RemoteClosing;
+                    CloseReason ??= SuperSocket.Channel.CloseReason.RemoteClosing;
 
                     break;
                 }
@@ -267,11 +265,9 @@ public sealed class KestrelIOCPChannel<TPackageInfo> :
                     if (e is not OperationCanceledException)
                         OnError("Exception happened in ReceiveAsync", e);
 
-                    if (!CloseReason.HasValue)
-                    {
-                        CloseReason = cts.IsCancellationRequested
-                            ? SuperSocket.Channel.CloseReason.LocalClosing : SuperSocket.Channel.CloseReason.SocketError;
-                    }
+                    CloseReason ??= cts.IsCancellationRequested
+                        ? SuperSocket.Channel.CloseReason.LocalClosing
+                        : SuperSocket.Channel.CloseReason.SocketError;
                 }
                 else if (!CloseReason.HasValue)
                 {

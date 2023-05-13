@@ -24,6 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 //    }
 //});
 
+
 builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseHostedService<RpcSocketServer>()
             .UseSession<RpcSession>()
@@ -31,8 +32,8 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseCommand(options => options.AddCommandAssembly(typeof(Login).Assembly))
             .UseClearIdleSession()
             .UseInProcSessionContainer()
-            .UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
-            //.UseIOCPTcpChannelCreatorFactory()
+            //.UseChannelCreatorFactory<TcpIocpChannelWithKestrelCreatorFactory>()
+            .UseIOCPTcpChannelCreatorFactory()
             .AsMinimalApiHostBuilder()
             .ConfigureHostBuilder();
 

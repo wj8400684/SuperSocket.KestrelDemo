@@ -3,10 +3,10 @@
     "Server": {
       "commandName": "Project",
       "launchBrowser": true,
+      "applicationUrl": "https://localhost:56701;http://localhost:56702",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:56701;http://localhost:56702"
+      }
     }
   }
 }
