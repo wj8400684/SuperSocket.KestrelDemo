@@ -29,6 +29,7 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
             .UseHostedService<RpcSocketServer>()
             .UseSession<RpcSession>()
             .UsePackageDecoder<RpcPackageDecoder>()
+            .UsePackageEncoder<RpcPackageEncode>()
             .UseCommand(options => options.AddCommandAssembly(typeof(Login).Assembly))
             .UseClearIdleSession()
             .UseInProcSessionContainer()
@@ -40,7 +41,6 @@ builder.Host.AsSuperSocketHostBuilder<RpcPackageBase, RpcPipeLineFilter>()
 builder.Services.AddHostedService<PackageHostServer>();
 builder.Services.AddLogging(s => s.AddConsole().AddDebug());
 builder.Services.AddSingleton<IPacketFactoryPool, DefaultPacketFactoryPool>();
-builder.Services.AddSingleton<IPackageEncoder<RpcPackageBase>, RpcPackageEncode>();
 
 var app = builder.Build();
 

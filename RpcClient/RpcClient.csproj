@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="SuperSocket.Client" Version="2.0.0-beta.16.411" />
+		<PackageReference Include="SuperSocket.Client" Version="2.0.0-beta.17.419" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\RpcCore\RpcCore.csproj" />

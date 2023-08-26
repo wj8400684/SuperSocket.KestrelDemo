@@ -6,7 +6,7 @@
 		<LangVersion>11.0</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="SuperSocket.Server" Version="2.0.0-beta.16.411" />
+		<PackageReference Include="SuperSocket.Server" Version="2.0.0-beta.17.419" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SuperSocket.IOCPTcpChannel\SuperSocket.IOCPTcpChannel.csproj" />

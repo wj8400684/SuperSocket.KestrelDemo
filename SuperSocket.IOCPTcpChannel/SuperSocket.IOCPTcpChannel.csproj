@@ -7,8 +7,8 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta.16.411" />
-		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.16.411" />
+		<PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta.17.419" />
+		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.17.419" />
 	</ItemGroup>
 
 	<ItemGroup>
